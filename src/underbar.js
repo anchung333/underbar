@@ -104,9 +104,26 @@
 
   // Produce a duplicate-free version of the array.
   _.uniq = function(array, isSorted, iterator) {
+    
+    var unique = [];
+    var iteratedArray = [];
 
+    if (!isSorted) {
+      _.each(array, function(item) {
+        if (unique.indexOf(item) === -1) {
+          unique.push(item);
+        }
+      })
+    } else {
+      _.each(array, function(value) {
+        if (iteratedArray.indexOf(iterator(value)) === -1) {
+          iteratedArray.push(iterator(value));
+          unique.push(value);
+        }
+      });    
+    }
+    return unique; 
   };
-
 
   // Return the results of applying an iterator to each element.
   _.map = function(collection, iterator) {

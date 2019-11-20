@@ -177,22 +177,14 @@
   //   }); // should be 5, regardless of the iterator function passed in
   //          No accumulator is given so the first element is used.
   _.reduce = function(collection, iterator, accumulator) {
-    if (accumulator === undefined) {
-      let accum = collection[0];
-      let i = 1;
-      while (collection[i] !== undefined) {
-        accum = iterator(accum, collection[i]);
-        i++;
-      }
-      return accum;
-    } else {
-      let j = 0;
-      while (collection[j] !== undefined) {
-        accumulator = iterator(accumulator, collection[j]);
-        j++
-      }
-      return accumulator;
-    }
+   _.each(collection, function(val, i) {
+     if (i === 0 && accumulator === undefined) {
+       accumulator = val;
+     } else {
+       accumulator = iterator(accumulator, val);
+     }
+   })
+   return accumulator;
   };
 
 //PART 1 ENDS HERE
@@ -213,12 +205,26 @@
   // Determine whether all of the elements match a truth test.
   _.every = function(collection, iterator) {
     // TIP: Try re-using reduce() here.
+    if (iterator === undefined) {
+    	iterator = _.identity;
+    }
+    return _.reduce(collection, function(testVal, item) {
+    	if (!iterator(item)) {
+    		testVal = false;
+    	}
+    	return testVal;
+    }, true);
   };
 
   // Determine whether any of the elements pass a truth test. If no iterator is
   // provided, provide a default one
   _.some = function(collection, iterator) {
     // TIP: There's a very clever way to re-use every() here.
+ 	var iteration = iterator || _.identity;
+    return !(_.every(collection, function (item) { return !iteration(item)}));	
+    // all elements falsy = false
+    //all elements truthy = true
+    //do double test: if .every test for all falsy values and .every test for all truthy values both return false, can return true for .some
   };
 
 
@@ -241,11 +247,25 @@
   //     bla: "even more stuff"
   //   }); // obj1 now contains key1, key2, key3 and bla
   _.extend = function(obj) {
+  	for (let i = 1; i < arguments.length; i++) {
+  		for (let key in arguments[i]) {
+  		obj[key] = arguments[i][key];
+  		} 
+  	}
+  	return obj;
   };
 
   // Like extend, but doesn't ever overwrite a key that already
   // exists in obj
   _.defaults = function(obj) {
+  	for (let i =1; i < arguments.length; i++) {
+  		for (let key in arguments[i]) {
+  			if (obj[key] === undefined) {
+  				obj[key] = arguments[i][key];
+  			}
+  		}
+  	}
+  	return obj;
   };
 
 
@@ -289,6 +309,18 @@
   // already computed the result for the given argument and return that value
   // instead if possible.
   _.memoize = function(func) {
+  	var calledArguments = {};
+  	var result;
+
+  	return function() {
+  		var currArgs = JSON.stringify(Array.prototype.slice.call(arguments));
+  		if (calledArguments[currArgs] === undefined) {
+  			result = func.apply(this, arguments);
+  			calledArguments[currArgs] = result;
+  		}
+  		return result;
+  	}
+
   };
 
   // Delays a function for the given number of milliseconds, and then calls
@@ -298,9 +330,11 @@
   // parameter. For example _.delay(someFunction, 500, 'a', 'b') will
   // call someFunction('a', 'b') after 500ms
   _.delay = function(func, wait) {
+  	//get the actual arguments of the function
+  	var args = Array.prototype.slice.call(arguments, 2);
+  	//enclose func.apply in another function so it doesn't get invoked early
+    return setTimeout(function() {func.apply(this, args)}, wait);
   };
-
-
   /**
    * ADVANCED COLLECTION OPERATIONS
    * ==============================
@@ -312,8 +346,18 @@
   // input array. For a tip on how to make a copy of an array, see:
   // http://mdn.io/Array.prototype.slice
   _.shuffle = function(array) {
+  	let copy = array.slice();
+  	let randomized = [];
+  	while (copy.length > 0) {
+  		let index = Math.floor(Math.random()*copy.length);
+  		let deleted = copy.splice(index, 1);
+  		randomized.push(deleted[0]);
+  	}
+  	return randomized;
   };
 
+
+//END OF PART II
 
   /**
    * ADVANCED
